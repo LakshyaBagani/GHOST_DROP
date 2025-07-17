@@ -1,16 +1,15 @@
 import express from 'express'
-import { Request , Response } from 'express';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import authRoute from "./routes/authRoute";
 
 dotenv.config()
 const app = express();
+app.use(cookieParser())
+app.use(express.json())
 
-app.get('/' , (req:Request,res:Response)=>{
-    res.send("Hello World")
-})
+app.use('/auth' , authRoute)
 
 app.listen(3000,()=>{
-    console.log("Listening on the port 3000");
-    console.log(process.env.DATABASE_URL);
-    
+    console.log("Listening on the port 3000"); 
 })
