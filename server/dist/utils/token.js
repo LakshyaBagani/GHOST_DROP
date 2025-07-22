@@ -18,7 +18,7 @@ const generateToken = (UserId, res) => __awaiter(void 0, void 0, void 0, functio
         console.error("JWT key is not define in enviornment variables");
         throw new Error("JWT secret key undefined");
     }
-    const token = jsonwebtoken_1.default.sign({ UserId }, process.env.MY_SERCET_KEY, { expiresIn: '15d' });
+    const token = jsonwebtoken_1.default.sign({ userId: UserId }, process.env.MY_SERCET_KEY, { expiresIn: '15d' });
     res.cookie("jwt", token, {
         maxAge: 15 * 24 * 60 * 60 * 1000,
         httpOnly: true,

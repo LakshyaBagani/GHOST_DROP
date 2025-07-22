@@ -18,7 +18,7 @@ const authProtect = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     const token = (_a = req.cookies) === null || _a === void 0 ? void 0 : _a.jwt;
     try {
         if (!token) {
-            res
+            return res
                 .status(401)
                 .send({ success: false, message: "Unable to find the jwt token" });
         }

@@ -8,7 +8,7 @@ const generateToken = async (UserId:number,res:Response) : Promise<string> =>{
         throw new Error("JWT secret key undefined")
     }
 
-    const token = jwt.sign({UserId} , process.env.MY_SERCET_KEY , {expiresIn:'15d'})
+    const token = jwt.sign({ userId: UserId } , process.env.MY_SERCET_KEY , {expiresIn:'15d'})
     res.cookie("jwt",token,{
         maxAge: 15 * 24 * 60 * 60 * 1000,
 		httpOnly: true,
