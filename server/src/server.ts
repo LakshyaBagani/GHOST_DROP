@@ -3,10 +3,14 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoute from "./routes/authRoute";
 import fileRoute from "./routes/fileRoute";
-import crypto from "crypto"
+import cors from "cors"
 
 dotenv.config()
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true, // if you're using cookies/auth headers
+}));
 app.use(cookieParser())
 app.use(express.json())
 
