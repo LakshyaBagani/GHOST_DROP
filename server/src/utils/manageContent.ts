@@ -15,10 +15,11 @@ export const encryptContent = (buffer: Buffer) => {
 
 export const decryptContent = (ivHex: String, encryptedHex: String) => {
   const iv = Buffer.from(ivHex, "hex");
+  const key = Buffer.from(process.env.ENCRYPTION_KEY!, 'hex');
   const encryptedBuffer = Buffer.from(encryptedHex, "hex");
   const decipher = crypto.createDecipheriv(
     "aes-256-cbc",
-    process.env.ENCRYPTION_KEY!,
+    key,
     iv
   );
   return Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);

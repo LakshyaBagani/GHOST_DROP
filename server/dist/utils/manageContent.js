@@ -16,8 +16,9 @@ const encryptContent = (buffer) => {
 exports.encryptContent = encryptContent;
 const decryptContent = (ivHex, encryptedHex) => {
     const iv = Buffer.from(ivHex, "hex");
+    const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
     const encryptedBuffer = Buffer.from(encryptedHex, "hex");
-    const decipher = crypto_1.default.createDecipheriv("aes-256-cbc", process.env.ENCRYPTION_KEY, iv);
+    const decipher = crypto_1.default.createDecipheriv("aes-256-cbc", key, iv);
     return Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
 };
 exports.decryptContent = decryptContent;

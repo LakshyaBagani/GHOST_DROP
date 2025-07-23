@@ -30,8 +30,9 @@ model Files {
 }
 
 model Link {
-  id     Int      @id @default(autoincrement())
-  used   Boolean @default(false)
-  token  String
+  id        Int      @id @default(autoincrement())
+  used      Boolean  @default(false)
+  token     String   @unique
+  tokenId   String   @unique 
   expiresAt DateTime
 }

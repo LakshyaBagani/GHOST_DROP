@@ -17,8 +17,11 @@ const crypto_1 = __importDefault(require("crypto"));
 const manageContent_1 = require("../utils/manageContent");
 const supabaseconfig_1 = require("../config/supabaseconfig");
 const db_1 = __importDefault(require("../config/db"));
+const generateLink_1 = require("../utils/generateLink");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const expireTime = 25;
         if (!req.file) {
             return res.status(401).send({ success: false, message: "No file found" });
         }
@@ -40,19 +43,23 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         if (error)
             return res.status(500).send({ error: error.message });
-        const newFile = yield db_1.default.files.create({
+        yield db_1.default.files.create({
             data: {
                 iv,
                 hash,
                 filePath,
                 mimeType,
                 fileName: req.file.originalname,
-                userId
+                userId,
             },
         });
-        return res
-            .status(200)
-            .send({ success: true, message: "Files uploaded successfully", userId: userId });
+        const link = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
+        return res.status(200).send({
+            success: true,
+            message: "Files uploaded successfully",
+            userId: userId,
+            Link: link,
+        });
     }
     catch (error) {
         res.status(500).send({ success: false, message: error });
@@ -60,16 +67,48 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.uploadFile = uploadFile;
 const getFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const hash = req.params.hash;
+        const token = req.query.token;
+        if (!token) {
+            return res.status(401).send({ success: false, message: "Invalid link" });
+        }
+        const decode = jsonwebtoken_1.default.verify(token, process.env.MY_SERCET_KEY);
+        const tokenHistory = yield db_1.default.link.findUnique({
+            where: { tokenId: decode.tokenId },
+        });
+        if (!tokenHistory) {
+            return res
+                .status(401)
+                .send({ success: false, message: "Invalid or expired link" });
+        }
+        if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
+            return res
+                .status(401)
+                .send({ success: false, message: "Link already used or expired" });
+        }
+        const ivHex = decode.iv;
         const files = yield supabaseconfig_1.supabase.storage.from("ghost-bucket").list();
-        const requireFile = (_a = files.data) === null || _a === void 0 ? void 0 : _a.find((f) => f.name.startsWith(hash));
-        if (!requireFile)
+        const fileMeta = files.data.find((f) => f.name.startsWith(decode.hash));
+        if (!fileMeta)
             return res.status(404).send("Not found");
+        const filePath = fileMeta.name;
+        const { data, error } = yield supabaseconfig_1.supabase.storage
+            .from("ghost-bucket")
+            .download(filePath);
+        if (error)
+            return res.status(500).json({ error: error.message });
+        const encryptedBuffer = Buffer.from(yield data.arrayBuffer());
+        const decrypted = (0, manageContent_1.decryptContent)(ivHex, encryptedBuffer.toString("hex"));
+        yield db_1.default.link.update({
+            where: { tokenId: decode.tokenId },
+            data: { used: true },
+        });
+        res.setHeader('Content-Type', decode.mimeType);
+        res.send(decrypted);
+        return res.status(200).send({ success: true });
     }
     catch (error) {
-        res.status(500).send({ success: false, message: error });
+        return res.status(500).send({ success: false, message: error });
     }
 });
 exports.getFiles = getFiles;

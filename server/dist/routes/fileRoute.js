@@ -10,4 +10,5 @@ const authMiddleware_1 = __importDefault(require("../middlewares/authMiddleware"
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 const router = express_1.default.Router();
 router.post('/upload', authMiddleware_1.default, upload.single("file"), fileHandlerController_1.uploadFile);
+router.get('/content', fileHandlerController_1.getFiles);
 exports.default = router;

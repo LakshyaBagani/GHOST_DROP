@@ -1,12 +1,16 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
-import { encryptContent } from "../utils/manageContent";
+import { decryptContent, encryptContent } from "../utils/manageContent";
 import { supabase } from "../config/supabaseconfig";
 import prisma from "../config/db";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { generateLink } from "../utils/generateLink";
+import jwt from "jsonwebtoken";
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
   try {
+    const expireTime = 25;
+
     if (!req.file) {
       return res.status(401).send({ success: false, message: "No file found" });
     }
@@ -42,13 +46,14 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    return res
-      .status(200)
-      .send({
-        success: true,
-        message: "Files uploaded successfully",
-        userId: userId,
-      });
+    const link = await generateLink(hash, expireTime, iv , mimeType);
+
+    return res.status(200).send({
+      success: true,
+      message: "Files uploaded successfully",
+      userId: userId,
+      Link: link,
+    });
   } catch (error) {
     res.status(500).send({ success: false, message: error });
   }
@@ -56,11 +61,58 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
 export const getFiles = async (req: Request, res: Response) => {
   try {
-    const hash = req.params.hash;
+    const token = req.query.token as string;
+
+    if (!token) {
+      return res.status(401).send({ success: false, message: "Invalid link" });
+    }
+
+    const decode = jwt.verify(token, process.env.MY_SERCET_KEY!) as {
+      tokenId: string;
+      iv: string;
+      hash: string;
+      mimeType:string
+    };
+
+    const tokenHistory = await prisma.link.findUnique({
+  where: { tokenId: decode.tokenId },
+});
+
+if (!tokenHistory) {
+  return res
+    .status(401)
+    .send({ success: false, message: "Invalid or expired link" });
+}
+
+if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
+  return res
+    .status(401)
+    .send({ success: false, message: "Link already used or expired" });
+}
+
+
+    const ivHex = decode.iv;
     const files = await supabase.storage.from("ghost-bucket").list();
-    const requireFile = files.data?.find((f) => f.name.startsWith(hash));
-    if (!requireFile) return res.status(404).send("Not found");
+    const fileMeta = files.data!.find((f) => f.name.startsWith(decode.hash));
+    if (!fileMeta) return res.status(404).send("Not found");
+    const filePath = fileMeta.name;
+
+    const { data, error } = await supabase.storage
+      .from("ghost-bucket")
+      .download(filePath);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const encryptedBuffer = Buffer.from(await data.arrayBuffer());
+    const decrypted = decryptContent(ivHex , encryptedBuffer.toString("hex"));
+
+    await prisma.link.update({
+      where: { tokenId: decode.tokenId },
+      data: { used: true },
+    });
+    res.setHeader('Content-Type' , decode.mimeType)
+    res.send(decrypted)
+    return res.status(200).send({ success: true});
   } catch (error) {
-    res.status(500).send({ success: false, message: error });
+    return res.status(500).send({ success: false, message: error });
   }
 };
