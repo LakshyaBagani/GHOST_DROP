@@ -21,6 +21,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
     }
 
     const mimeType = req.file.mimetype;
+    const fileName = req.file.originalname;
     const hash = crypto
       .createHash("sha256")
       .update(req.file.buffer)
@@ -41,18 +42,29 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         hash,
         filePath,
         mimeType,
-        fileName: req.file.originalname,
+        fileName,
         userId,
       },
     });
 
-    const link = await generateLink(hash, expireTime, iv , mimeType);
+    const reqFileFromDB = await prisma.files.findFirst({
+      where:{iv}
+    })
+
+
+    const {Link , LinkTokenId} = await generateLink(hash, expireTime, iv , mimeType);
+
+    const userLink = await prisma.link.findFirst({
+      where:{tokenId:LinkTokenId}
+    })
 
     return res.status(200).send({
       success: true,
       message: "Files uploaded successfully",
-      userId: userId,
-      Link: link,
+      Filename:fileName,
+      Link : Link,
+      createdAt : reqFileFromDB?.createdAt,
+      status:userLink?.used
     });
   } catch (error) {
     res.status(500).send({ success: false, message: error });

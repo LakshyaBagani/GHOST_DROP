@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Lock, Ghost, FileImage, Video, Music, FileText } from 'lucide-react';
 import axios from 'axios';
-
-export default function GhostDropSignup() {
+import { toast } from 'react-toastify';
+export default function GhostDropSignup({setIsLoggedIn}) {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +40,6 @@ export default function GhostDropSignup() {
     setIsLoading(true);
 
     try {
-      // Use 'name' or 'fullName' depending on your backend's requirements
       const payload = {
         name: formData.fullName,
         email: formData.email,
@@ -50,22 +49,20 @@ export default function GhostDropSignup() {
 
       console.log('Signup response:', response.data);
 
-      if (response.status === 201 || response.data.success) {
-        alert('Account created! Please log in.');
-        navigate('/login'); // Navigate to login page after successful signup
+      if (response.status === 200 || response.data.success) {
+        toast.success(`Account created with email ${formData.email}`)
+        setIsLoggedIn(true)
+        localStorage.setItem("token",response.data.token)
+        navigate('/'); 
       } else {
-        alert(response.data.message || 'Signup failed.');
+        toast.error('Signup failed. Please try again.')
       }
     } catch (error) {
       console.error('Signup error:', error);
-      alert(error.response?.data?.message || 'Signup failed. Please try again.');
+      toast.error('Signup failed. Please try again.')
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const goToLogin = () => {
-    navigate('/login');
   };
 
   const supportedFiles = [

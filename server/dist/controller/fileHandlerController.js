@@ -30,6 +30,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             return res.status(401).json({ message: "Unauthorized" });
         }
         const mimeType = req.file.mimetype;
+        const fileName = req.file.originalname;
         const hash = crypto_1.default
             .createHash("sha256")
             .update(req.file.buffer)
@@ -49,16 +50,24 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 hash,
                 filePath,
                 mimeType,
-                fileName: req.file.originalname,
+                fileName,
                 userId,
             },
         });
-        const link = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
+        const reqFileFromDB = yield db_1.default.files.findFirst({
+            where: { iv }
+        });
+        const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
+        const userLink = yield db_1.default.link.findFirst({
+            where: { tokenId: LinkTokenId }
+        });
         return res.status(200).send({
             success: true,
             message: "Files uploaded successfully",
-            userId: userId,
-            Link: link,
+            Filename: fileName,
+            Link: Link,
+            createdAt: reqFileFromDB === null || reqFileFromDB === void 0 ? void 0 : reqFileFromDB.createdAt,
+            status: userLink === null || userLink === void 0 ? void 0 : userLink.used
         });
     }
     catch (error) {

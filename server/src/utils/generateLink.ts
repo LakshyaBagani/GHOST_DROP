@@ -24,5 +24,5 @@ export const generateLink = async (hash:String , expireTime:any , iv:String , mi
     })
 
     const link = `http://localhost:3000/files/content?token=${token}`
-    return link;
+    return {Link:link , LinkTokenId:tokenId};
 }

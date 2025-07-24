@@ -35,6 +35,6 @@ const generateLink = (hash, expireTime, iv, mimeType) => __awaiter(void 0, void 
         }
     });
     const link = `http://localhost:3000/files/content?token=${token}`;
-    return link;
+    return { Link: link, LinkTokenId: tokenId };
 });
 exports.generateLink = generateLink;

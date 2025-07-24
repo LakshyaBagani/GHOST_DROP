@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Eye, EyeOff, Mail, Lock, Ghost, FileImage, Video, Music, FileText } from 'lucide-react';
 import axios from 'axios';
 
-export default function GhostDropLogin() {
+export default function GhostDropLogin({setIsLoggedIn}) {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -12,7 +13,6 @@ export default function GhostDropLogin() {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [login, setLogin] = useState(false); // To track login status
 
   const handleInputChange = (e) => {
     setFormData({
@@ -29,15 +29,15 @@ export default function GhostDropLogin() {
         password: formData.password,
       });
       console.log('Login response:', response.data);
-      // Handle your login success (e.g., save token, update auth state)
       if (response.status === 200) {
-        setLogin(true);
-        // Optionally navigate to dashboard or home
-        // navigate('/dashboard');
+        toast.success(`Login successful for email ${formData.email}`);
+        setIsLoggedIn(true);
+        localStorage.setItem("token",response.data.token)
+        navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert(error.response?.data?.message || 'Login failed. Please try again.');
+      toast.error('Login failed. Please try again.')
     } finally {
       setIsLoading(false);
     }
