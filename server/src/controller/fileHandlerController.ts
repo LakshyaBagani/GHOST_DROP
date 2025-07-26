@@ -65,7 +65,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
     return res.status(200).send({
       success: true,
       message: "Files uploaded successfully",
-      Filename: fileName,
+      FileName: fileName,
       Link: Link,
       createdAt: reqFileFromDB?.createdAt,
       status: userLink?.used,

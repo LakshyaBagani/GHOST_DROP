@@ -64,7 +64,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return res.status(200).send({
             success: true,
             message: "Files uploaded successfully",
-            Filename: fileName,
+            FileName: fileName,
             Link: Link,
             createdAt: reqFileFromDB === null || reqFileFromDB === void 0 ? void 0 : reqFileFromDB.createdAt,
             status: userLink === null || userLink === void 0 ? void 0 : userLink.used,

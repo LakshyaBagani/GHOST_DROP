@@ -68,7 +68,7 @@ const FileUpload = ({
 
        const newFile = {
         id: Date.now().toString(),
-        name: upload.Filename,
+        name: upload.FileName,
         createdAt: upload.createdAt,
         status: upload.status ?? false,
         Link: upload.Link,

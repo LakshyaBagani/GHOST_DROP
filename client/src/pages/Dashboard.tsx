@@ -31,15 +31,21 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("User file response", response.data);
+      const filesFromServer = response.data.files;
+
+    const formattedFiles = filesFromServer.map((file: any) => ({
+      ...file,
+      createdAt: new Date(file.createdAt),
+      type: file.mimeType,  
+    }));
+
+    setFiles(formattedFiles);
     };
 
     fetchFiles();
   }, [navigate]);
 
-  useEffect(() => {
-    localStorage.setItem("ghost-drop-files", JSON.stringify(files));
-  }, [files]);
+  useEffect(()=>{console.log("User file response", files)},[files])
 
   const handleFileUpload = (newFile: FileData) => {
     setFiles((prev) => [newFile, ...prev]);
@@ -80,17 +86,18 @@ const Dashboard = () => {
 
   // Filter and sort files
   const filteredFiles = files.filter((file) => {
-    const matchesSearch = file.name
+    const matchesSearch = (file.name || "")
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+    const fileType = file.type || "";
     const matchesFilter =
       filterType === "all" ||
-      (filterType === "image" && file.type.startsWith("image/")) ||
-      (filterType === "video" && file.type.startsWith("video/")) ||
+      (filterType === "image" && fileType.startsWith("image/")) ||
+      (filterType === "video" && fileType.startsWith("video/")) ||
       (filterType === "document" &&
-        (file.type.includes("pdf") || file.type.includes("document"))) ||
+        (file.type.includes("pdf") || fileType.includes("document"))) ||
       (filterType === "archive" &&
-        (file.type.includes("zip") || file.type.includes("archive")));
+        (file.type.includes("zip") || fileType.includes("archive")));
 
     return matchesSearch && matchesFilter;
   });
