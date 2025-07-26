@@ -69,7 +69,8 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             createdAt: reqFileFromDB === null || reqFileFromDB === void 0 ? void 0 : reqFileFromDB.createdAt,
             status: userLink === null || userLink === void 0 ? void 0 : userLink.used,
             iv: iv,
-            tokenId: LinkTokenId
+            tokenId: LinkTokenId,
+            type: mimeType
         });
     }
     catch (error) {
@@ -150,7 +151,7 @@ const getActiveStatus = (req, res) => __awaiter(void 0, void 0, void 0, function
                 .send({ success: false, message: "Unable to fetch the file" });
         }
         const file = yield db_1.default.link.findUnique({
-            where: { tokenId }
+            where: { tokenId },
         });
         const status = file === null || file === void 0 ? void 0 : file.used;
         return res.status(200).send({ success: true, status: status });
@@ -169,14 +170,16 @@ const reinitiliasedFile = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 .send({ success: false, message: "Token ID is required" });
         }
         const file = yield db_1.default.link.findUnique({
-            where: { tokenId }
+            where: { tokenId },
         });
         if (!file) {
-            return res.status(404).send({ success: false, message: "File not found" });
+            return res
+                .status(404)
+                .send({ success: false, message: "File not found" });
         }
         const updatedFile = yield db_1.default.link.update({
             where: { tokenId },
-            data: { used: !file.used }
+            data: { used: !file.used },
         });
         return res.status(200).send({ success: true, updatedFile: updatedFile });
     }

@@ -71,6 +71,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
       status: userLink?.used,
       iv: iv,
       tokenId: LinkTokenId,
+      type:mimeType
     });
   } catch (error) {
     res.status(500).send({ success: false, message: error });
