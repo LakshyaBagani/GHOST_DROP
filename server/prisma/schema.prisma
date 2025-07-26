@@ -19,7 +19,7 @@ model User {
 
 model Files {
   id        Int      @id @default(autoincrement())
-  iv        String
+  iv        String   @unique
   hash      String
   filePath  String
   mimeType  String

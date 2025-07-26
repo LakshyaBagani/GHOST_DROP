@@ -48,23 +48,29 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
     });
 
     const reqFileFromDB = await prisma.files.findFirst({
-      where:{iv}
-    })
+      where: { iv },
+    });
 
-
-    const {Link , LinkTokenId} = await generateLink(hash, expireTime, iv , mimeType);
+    const { Link, LinkTokenId } = await generateLink(
+      hash,
+      expireTime,
+      iv,
+      mimeType
+    );
 
     const userLink = await prisma.link.findFirst({
-      where:{tokenId:LinkTokenId}
-    })
+      where: { tokenId: LinkTokenId },
+    });
 
     return res.status(200).send({
       success: true,
       message: "Files uploaded successfully",
-      Filename:fileName,
-      Link : Link,
-      createdAt : reqFileFromDB?.createdAt,
-      status:userLink?.used
+      Filename: fileName,
+      Link: Link,
+      createdAt: reqFileFromDB?.createdAt,
+      status: userLink?.used,
+      iv: iv,
+      tokenId: LinkTokenId,
     });
   } catch (error) {
     res.status(500).send({ success: false, message: error });
@@ -83,25 +89,24 @@ export const getFiles = async (req: Request, res: Response) => {
       tokenId: string;
       iv: string;
       hash: string;
-      mimeType:string
+      mimeType: string;
     };
 
     const tokenHistory = await prisma.link.findUnique({
-  where: { tokenId: decode.tokenId },
-});
+      where: { tokenId: decode.tokenId },
+    });
 
-if (!tokenHistory) {
-  return res
-    .status(401)
-    .send({ success: false, message: "Invalid or expired link" });
-}
+    if (!tokenHistory) {
+      return res
+        .status(401)
+        .send({ success: false, message: "Invalid or expired link" });
+    }
 
-if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
-  return res
-    .status(401)
-    .send({ success: false, message: "Link already used or expired" });
-}
-
+    if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
+      return res
+        .status(401)
+        .send({ success: false, message: "Link already used or expired" });
+    }
 
     const ivHex = decode.iv;
     const files = await supabase.storage.from("ghost-bucket").list();
@@ -115,15 +120,82 @@ if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
     if (error) return res.status(500).json({ error: error.message });
 
     const encryptedBuffer = Buffer.from(await data.arrayBuffer());
-    const decrypted = decryptContent(ivHex , encryptedBuffer.toString("hex"));
+    const decrypted = decryptContent(ivHex, encryptedBuffer.toString("hex"));
 
     await prisma.link.update({
       where: { tokenId: decode.tokenId },
       data: { used: true },
     });
-    res.setHeader('Content-Type' , decode.mimeType)
-    res.send(decrypted)
-    return res.status(200).send({ success: true});
+    res.setHeader("Content-Type", decode.mimeType);
+    res.send(decrypted);
+    return res.status(200).send({ success: true });
+  } catch (error) {
+    return res.status(500).send({ success: false, message: error });
+  }
+};
+
+export const deleteFile = async (req: Request, res: Response) => {
+  try {
+    const { iv } = req.body;
+    if (!iv) {
+      return res
+        .status(401)
+        .send({ success: false, message: "Unable to delete the file" });
+    }
+    await prisma.files.delete({
+      where: { iv },
+    });
+    return res.send({ success: true, message: "File deleted" });
+  } catch (error) {
+    return res.status(500).send({ success: false, message: error });
+  }
+};
+
+export const getActiveStatus = async (req: Request, res: Response) => {
+  try {
+    const { tokenId } = req.body;
+    if (!tokenId) {
+      return res
+        .status(401)
+        .send({ success: false, message: "Unable to fetch the file" });
+    }
+    const file = await prisma.link.findUnique({
+      where: { tokenId },
+    });
+
+    const status = file?.used;
+    return res.status(200).send({ success: true, status: status });
+  } catch (error) {
+    return res.status(500).send({ success: false, message: error });
+  }
+};
+
+export const reinitiliasedFile = async (req: Request, res: Response) => {
+  try {
+    const { tokenId } = req.body;
+
+    if (!tokenId) {
+      return res
+        .status(401)
+        .send({ success: false, message: "Token ID is required" });
+    }
+
+    const file = await prisma.link.findUnique({
+      where: { tokenId },
+    });
+
+    if (!file) {
+      return res
+        .status(404)
+        .send({ success: false, message: "File not found" });
+    }
+
+    const updatedFile = await prisma.link.update({
+      where: { tokenId },
+      data: { used: !file.used },
+    });
+
+    return res.status(200).send({ success: true, updatedFile: updatedFile });
   } catch (error) {
     return res.status(500).send({ success: false, message: error });
   }

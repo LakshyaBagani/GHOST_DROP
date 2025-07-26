@@ -13,4 +13,7 @@ const router = express_1.default.Router();
 router.post('/upload', authMiddleware_1.default, upload.single("file"), fileHandlerController_1.uploadFile);
 router.get('/content', fileHandlerController_1.getFiles);
 router.get('/allfiles', authMiddleware_1.default, userFileController_1.getAllFiles);
+router.delete('/delete', fileHandlerController_1.deleteFile);
+router.post('/status', fileHandlerController_1.getActiveStatus);
+router.post('/updateStatus', fileHandlerController_1.reinitiliasedFile);
 exports.default = router;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFiles = exports.uploadFile = void 0;
+exports.reinitiliasedFile = exports.getActiveStatus = exports.deleteFile = exports.getFiles = exports.uploadFile = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const manageContent_1 = require("../utils/manageContent");
 const supabaseconfig_1 = require("../config/supabaseconfig");
@@ -55,11 +55,11 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
         });
         const reqFileFromDB = yield db_1.default.files.findFirst({
-            where: { iv }
+            where: { iv },
         });
         const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
         const userLink = yield db_1.default.link.findFirst({
-            where: { tokenId: LinkTokenId }
+            where: { tokenId: LinkTokenId },
         });
         return res.status(200).send({
             success: true,
@@ -67,7 +67,9 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             Filename: fileName,
             Link: Link,
             createdAt: reqFileFromDB === null || reqFileFromDB === void 0 ? void 0 : reqFileFromDB.createdAt,
-            status: userLink === null || userLink === void 0 ? void 0 : userLink.used
+            status: userLink === null || userLink === void 0 ? void 0 : userLink.used,
+            iv: iv,
+            tokenId: LinkTokenId
         });
     }
     catch (error) {
@@ -112,7 +114,7 @@ const getFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             where: { tokenId: decode.tokenId },
             data: { used: true },
         });
-        res.setHeader('Content-Type', decode.mimeType);
+        res.setHeader("Content-Type", decode.mimeType);
         res.send(decrypted);
         return res.status(200).send({ success: true });
     }
@@ -121,3 +123,65 @@ const getFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getFiles = getFiles;
+const deleteFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { iv } = req.body;
+        if (!iv) {
+            return res
+                .status(401)
+                .send({ success: false, message: "Unable to delete the file" });
+        }
+        yield db_1.default.files.delete({
+            where: { iv },
+        });
+        return res.send({ success: true, message: "File deleted" });
+    }
+    catch (error) {
+        return res.status(500).send({ success: false, message: error });
+    }
+});
+exports.deleteFile = deleteFile;
+const getActiveStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { tokenId } = req.body;
+        if (!tokenId) {
+            return res
+                .status(401)
+                .send({ success: false, message: "Unable to fetch the file" });
+        }
+        const file = yield db_1.default.link.findUnique({
+            where: { tokenId }
+        });
+        const status = file === null || file === void 0 ? void 0 : file.used;
+        return res.status(200).send({ success: true, status: status });
+    }
+    catch (error) {
+        return res.status(500).send({ success: false, message: error });
+    }
+});
+exports.getActiveStatus = getActiveStatus;
+const reinitiliasedFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { tokenId } = req.body;
+        if (!tokenId) {
+            return res
+                .status(401)
+                .send({ success: false, message: "Token ID is required" });
+        }
+        const file = yield db_1.default.link.findUnique({
+            where: { tokenId }
+        });
+        if (!file) {
+            return res.status(404).send({ success: false, message: "File not found" });
+        }
+        const updatedFile = yield db_1.default.link.update({
+            where: { tokenId },
+            data: { used: !file.used }
+        });
+        return res.status(200).send({ success: true, updatedFile: updatedFile });
+    }
+    catch (error) {
+        return res.status(500).send({ success: false, message: error });
+    }
+});
+exports.reinitiliasedFile = reinitiliasedFile;
