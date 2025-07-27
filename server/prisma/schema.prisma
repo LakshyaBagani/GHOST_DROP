@@ -25,8 +25,11 @@ model Files {
   mimeType  String
   fileName  String
   createdAt DateTime @default(now())
-  userId    Int      
+  userId    Int
+  linkId    String   @unique  
+
   user      User     @relation(fields: [userId], references: [id])
+  link      Link     @relation(fields: [linkId], references: [tokenId])
 }
 
 model Link {
@@ -35,4 +38,12 @@ model Link {
   token     String   @unique
   tokenId   String   @unique 
   expiresAt DateTime
+  Link      String   
+
+  file      Files?   
 }
+
+
+
+
+

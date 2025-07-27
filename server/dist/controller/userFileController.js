@@ -18,14 +18,26 @@ const getAllFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const userId = req.userId;
         if (!userId) {
-            return res.status(401).send({ success: false, messsage: "User not found" });
+            return res
+                .status(401)
+                .send({ success: false, messsage: "User not found" });
         }
         const files = yield db_1.default.files.findMany({
             where: { userId },
-            orderBy: { createdAt: "desc" }
+            orderBy: { createdAt: "desc" },
+            include: {
+                link: {
+                    select: {
+                        used: true,
+                        Link: true
+                    },
+                },
+            },
         });
         if (files.length == 0) {
-            return res.status(401).send({ success: false, message: "No files found" });
+            return res
+                .status(401)
+                .send({ success: false, message: "No files found" });
         }
         return res.status(200).send({ success: true, files });
     }

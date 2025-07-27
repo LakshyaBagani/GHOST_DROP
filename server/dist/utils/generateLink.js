@@ -27,14 +27,15 @@ const generateLink = (hash, expireTime, iv, mimeType) => __awaiter(void 0, void 
         mimeType
     };
     const token = jsonwebtoken_1.default.sign(payload, process.env.MY_SERCET_KEY);
+    const link = `http://localhost:3000/files/content?token=${token}`;
     yield db_1.default.link.create({
         data: {
             token,
             tokenId,
-            expiresAt: new Date(exp * 1000)
+            expiresAt: new Date(exp * 1000),
+            Link: link
         }
     });
-    const link = `http://localhost:3000/files/content?token=${token}`;
     return { Link: link, LinkTokenId: tokenId };
 });
 exports.generateLink = generateLink;

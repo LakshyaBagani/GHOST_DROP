@@ -44,6 +44,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         if (error)
             return res.status(500).send({ error: error.message });
+        const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
         yield db_1.default.files.create({
             data: {
                 iv,
@@ -52,12 +53,12 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 mimeType,
                 fileName,
                 userId,
+                linkId: LinkTokenId
             },
         });
         const reqFileFromDB = yield db_1.default.files.findFirst({
             where: { iv },
         });
-        const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
         const userLink = yield db_1.default.link.findFirst({
             where: { tokenId: LinkTokenId },
         });
@@ -153,6 +154,9 @@ const getActiveStatus = (req, res) => __awaiter(void 0, void 0, void 0, function
         const file = yield db_1.default.link.findUnique({
             where: { tokenId },
         });
+        if (!file) {
+            return res.status(401).send({ success: false, message: "Unable to get the file" });
+        }
         const status = file === null || file === void 0 ? void 0 : file.used;
         return res.status(200).send({ success: true, status: status });
     }

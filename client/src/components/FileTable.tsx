@@ -26,7 +26,7 @@ export interface FileData {
   name: string;
   Link: string;
   createdAt: Date;
-  status: "used" | "unused";
+  status: Boolean;
   type:string
 }
 
@@ -56,19 +56,18 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
   };
 
   const handleCopy = (fileName: string) => {
-  const userFileString = localStorage.getItem("requiredFile");
-
-  if (!userFileString) return;
+  console.log("files",files);
 
   try {
-    const userFiles: FileData[] = JSON.parse(userFileString);
 
-    const matchedFile = userFiles.find((file) => file.name === fileName);
+    const matchedFile = files.find((file) => file.name === fileName);
+    console.log("Matched file",matchedFile);
+    
 
     if (matchedFile) {
       const fileLink = matchedFile.Link;
       navigator.clipboard.writeText(fileLink);
-      console.log(files);
+     
       
       toast({
         title: "Link copied!",
@@ -137,24 +136,24 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
                 </TableCell>
                 <TableCell>
                   <Badge 
-                    variant={file.status === "used" ? "default" : "secondary"}
-                    className={file.status === "used" ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}
+                    variant={file.status === false ? "default" : "secondary"}
+                    className={file.status === false ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}
                   >
-                    {file.status === "used" ? "Used" : "Unused"}
+                    {file.status === true ? "Used" : "Unused"}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <Button
-                    variant={file.status === "used" ? "outline" : "default"}
+                    variant={file.status === false ? "outline" : "default"}
                     size="sm"
                     onClick={() => onToggleStatus(file.id)}
                     className={
-                      file.status === "used" 
+                      file.status === false 
                         ? "border-muted-foreground text-muted-foreground hover:bg-muted" 
                         : "bg-success hover:bg-success/80 text-success-foreground border-success"
                     }
                   >
-                    {file.status === "used" ? "Mark as Unused" : "Mark as Used"}
+                    {"Mark as Unused"}
                   </Button>
                 </TableCell>
                 <TableCell>

@@ -36,6 +36,13 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
     if (error) return res.status(500).send({ error: error.message });
 
+    const { Link, LinkTokenId } = await generateLink(
+      hash,
+      expireTime,
+      iv,
+      mimeType
+    );
+
     await prisma.files.create({
       data: {
         iv,
@@ -44,19 +51,13 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         mimeType,
         fileName,
         userId,
+        linkId:LinkTokenId
       },
     });
 
     const reqFileFromDB = await prisma.files.findFirst({
       where: { iv },
     });
-
-    const { Link, LinkTokenId } = await generateLink(
-      hash,
-      expireTime,
-      iv,
-      mimeType
-    );
 
     const userLink = await prisma.link.findFirst({
       where: { tokenId: LinkTokenId },
@@ -163,7 +164,9 @@ export const getActiveStatus = async (req: Request, res: Response) => {
     const file = await prisma.link.findUnique({
       where: { tokenId },
     });
-
+    if(!file){
+      return res.status(401).send({success:false , message:"Unable to get the file"})
+    }
     const status = file?.used;
     return res.status(200).send({ success: true, status: status });
   } catch (error) {

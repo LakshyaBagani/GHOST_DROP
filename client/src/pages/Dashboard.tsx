@@ -33,14 +33,19 @@ const Dashboard = () => {
         },
       });
       const filesFromServer = response.data.files;
+      console.log("All files",response.data);
+      
 
       const formattedFiles = filesFromServer.map((file: any) => ({
         ...file,
         createdAt: new Date(file.createdAt),
         type: file.mimeType,
         name: file.fileName,
+        status:file.link.used,
+        Link:file.link.Link
       }));
-
+      console.log("Formate",formattedFiles);
+      
       setFiles(formattedFiles);
     };
 
@@ -48,7 +53,6 @@ const Dashboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    console.log("Usersss file response", sortedFiles);
     console.log(
       "Local files",
       JSON.parse(localStorage.getItem("requiredFile"))
@@ -61,45 +65,57 @@ const Dashboard = () => {
   };
 
   const handleToggleStatus = (id: string) => {
-    setFiles((prev) =>
-      prev.map((file) =>
-        file.id === id
-          ? { ...file, status: file.status === "used" ? "unused" : "used" }
-          : file
-      )
-    );
+    // setFiles((prev) =>
+    //   prev.map((file) =>
+    //     file.id === id
+    //       ? { ...file, status: file.status === "used" ? "unused" : "used" }
+    //       : file
+    //   )
+    // );
 
-    const file = files.find((f) => f.id === id);
-    if (file) {
-      toast({
-        title: "Status updated",
-        description: `${file.name} marked as ${
-          file.status === "used" ? "unused" : "used"
-        }.`,
-      });
-    }
+    // const file = files.find((f) => f.id === id);
+    // if (file) {
+    //   toast({
+    //     title: "Status updated",
+    //     description: `${file.name} marked as ${
+    //       file.status === false ? "unused" : "used"
+    //     }.`,
+    //   });
+    // }
   };
 
-  const handleDeleteFile = async (id: string) => {
+  
 
+  const handleDeleteFile = async (id: string) => {
     const file = files.find((f) => f.id === id);
     const token = localStorage.getItem("token");
+    try {
+      const response = await axios.delete(
+        "http://localhost:3000/files/delete",
+        {
+          data: { id },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const response = await axios.delete("http://localhost:3000/files/delete", {
-      data: { id },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-
-    if (response.data.success === true) {
+      if (response.data.success === true) {
+        toast({
+          title: "File deleted",
+          description: `${file.name} has been removed from your vault.`,
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (error) {
       toast({
-        title: "File deleted",
-        description: `${file.name} has been removed from your vault.`,
+        title: "File not deleted",
+        description: `Failed to delete the ${file.name}`,
         variant: "destructive",
       });
-      setTimeout(()=>{window.location.reload();},500)
     }
   };
 
@@ -139,8 +155,8 @@ const Dashboard = () => {
 
   const stats = {
     total: files.length,
-    used: files.filter((f) => f.status === "used").length,
-    unused: files.filter((f) => f.status === "unused").length,
+    used: files.filter((f) => f.status === false).length,
+    unused: files.filter((f) => f.status === false).length,
   };
 
   return (
