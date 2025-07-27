@@ -9,8 +9,6 @@ import jwt from "jsonwebtoken";
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
   try {
-    const expireTime = 25;
-
     if (!req.file) {
       return res.status(401).send({ success: false, message: "No file found" });
     }
@@ -36,12 +34,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
     if (error) return res.status(500).send({ error: error.message });
 
-    const { Link, LinkTokenId } = await generateLink(
-      hash,
-      expireTime,
-      iv,
-      mimeType
-    );
+    const { Link, LinkTokenId } = await generateLink(hash, iv, mimeType);
 
     await prisma.files.create({
       data: {
@@ -51,7 +44,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         mimeType,
         fileName,
         userId,
-        linkId:LinkTokenId
+        linkId: LinkTokenId,
       },
     });
 
@@ -72,7 +65,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
       status: userLink?.used,
       iv: iv,
       tokenId: LinkTokenId,
-      type:mimeType
+      type: mimeType,
     });
   } catch (error) {
     res.status(500).send({ success: false, message: error });
@@ -153,54 +146,49 @@ export const deleteFile = async (req: Request, res: Response) => {
   }
 };
 
-export const getActiveStatus = async (req: Request, res: Response) => {
-  try {
-    const { tokenId } = req.body;
-    if (!tokenId) {
-      return res
-        .status(401)
-        .send({ success: false, message: "Unable to fetch the file" });
-    }
-    const file = await prisma.link.findUnique({
-      where: { tokenId },
-    });
-    if(!file){
-      return res.status(401).send({success:false , message:"Unable to get the file"})
-    }
-    const status = file?.used;
-    return res.status(200).send({ success: true, status: status });
-  } catch (error) {
-    return res.status(500).send({ success: false, message: error });
-  }
-};
-
 export const reinitiliasedFile = async (req: Request, res: Response) => {
   try {
     const { tokenId } = req.body;
 
     if (!tokenId) {
-      return res
-        .status(401)
-        .send({ success: false, message: "Token ID is required" });
+      return res.status(400).send({ success: false, message: "Token ID is required" });
     }
 
-    const file = await prisma.link.findUnique({
+    const existingLink = await prisma.link.findUnique({
       where: { tokenId },
     });
 
-    if (!file) {
-      return res
-        .status(404)
-        .send({ success: false, message: "File not found" });
-    }
-
-    const updatedFile = await prisma.link.update({
-      where: { tokenId },
-      data: { used: !file.used },
+    const associatedFile = await prisma.files.findUnique({
+      where: { linkId: tokenId },
     });
 
-    return res.status(200).send({ success: true, updatedFile: updatedFile });
+    if (!existingLink || !associatedFile) {
+      return res.status(404).send({ success: false, message: "File or Link not found" });
+    }
+
+    const { Link: newLinkUrl, LinkTokenId: newTokenId, Token: newToken } = await generateLink(
+      associatedFile.hash,
+      associatedFile.iv,
+      associatedFile.mimeType,
+    );
+
+    if (existingLink.token === newToken) {
+      return res.status(200).send({ success: true, message: "Token unchanged", updatedFile: existingLink });
+    }
+
+    const updatedLink = await prisma.link.update({
+      where: { tokenId },
+      data: {
+        used: false,
+        token: newToken,
+        Link: newLinkUrl,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      },
+    });
+
+    return res.status(200).send({ success: true, updatedFile: updatedLink });
   } catch (error) {
-    return res.status(500).send({ success: false, message: error });
+    console.error("Error in reinitiliasedFile:", error);
+    return res.status(500).send({ success: false, message: (error as Error).message || error });
   }
 };

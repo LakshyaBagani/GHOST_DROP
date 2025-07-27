@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reinitiliasedFile = exports.getActiveStatus = exports.deleteFile = exports.getFiles = exports.uploadFile = void 0;
+exports.reinitiliasedFile = exports.deleteFile = exports.getFiles = exports.uploadFile = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const manageContent_1 = require("../utils/manageContent");
 const supabaseconfig_1 = require("../config/supabaseconfig");
@@ -21,7 +21,6 @@ const generateLink_1 = require("../utils/generateLink");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const expireTime = 25;
         if (!req.file) {
             return res.status(401).send({ success: false, message: "No file found" });
         }
@@ -44,7 +43,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         if (error)
             return res.status(500).send({ error: error.message });
-        const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, expireTime, iv, mimeType);
+        const { Link, LinkTokenId } = yield (0, generateLink_1.generateLink)(hash, iv, mimeType);
         yield db_1.default.files.create({
             data: {
                 iv,
@@ -53,7 +52,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 mimeType,
                 fileName,
                 userId,
-                linkId: LinkTokenId
+                linkId: LinkTokenId,
             },
         });
         const reqFileFromDB = yield db_1.default.files.findFirst({
@@ -71,7 +70,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             status: userLink === null || userLink === void 0 ? void 0 : userLink.used,
             iv: iv,
             tokenId: LinkTokenId,
-            type: mimeType
+            type: mimeType,
         });
     }
     catch (error) {
@@ -143,52 +142,39 @@ const deleteFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.deleteFile = deleteFile;
-const getActiveStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { tokenId } = req.body;
-        if (!tokenId) {
-            return res
-                .status(401)
-                .send({ success: false, message: "Unable to fetch the file" });
-        }
-        const file = yield db_1.default.link.findUnique({
-            where: { tokenId },
-        });
-        if (!file) {
-            return res.status(401).send({ success: false, message: "Unable to get the file" });
-        }
-        const status = file === null || file === void 0 ? void 0 : file.used;
-        return res.status(200).send({ success: true, status: status });
-    }
-    catch (error) {
-        return res.status(500).send({ success: false, message: error });
-    }
-});
-exports.getActiveStatus = getActiveStatus;
 const reinitiliasedFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { tokenId } = req.body;
         if (!tokenId) {
-            return res
-                .status(401)
-                .send({ success: false, message: "Token ID is required" });
+            return res.status(400).send({ success: false, message: "Token ID is required" });
         }
-        const file = yield db_1.default.link.findUnique({
+        const existingLink = yield db_1.default.link.findUnique({
             where: { tokenId },
         });
-        if (!file) {
-            return res
-                .status(404)
-                .send({ success: false, message: "File not found" });
-        }
-        const updatedFile = yield db_1.default.link.update({
-            where: { tokenId },
-            data: { used: !file.used },
+        const associatedFile = yield db_1.default.files.findUnique({
+            where: { linkId: tokenId },
         });
-        return res.status(200).send({ success: true, updatedFile: updatedFile });
+        if (!existingLink || !associatedFile) {
+            return res.status(404).send({ success: false, message: "File or Link not found" });
+        }
+        const { Link: newLinkUrl, LinkTokenId: newTokenId, Token: newToken } = yield (0, generateLink_1.generateLink)(associatedFile.hash, associatedFile.iv, associatedFile.mimeType);
+        if (existingLink.token === newToken) {
+            return res.status(200).send({ success: true, message: "Token unchanged", updatedFile: existingLink });
+        }
+        const updatedLink = yield db_1.default.link.update({
+            where: { tokenId },
+            data: {
+                used: false,
+                token: newToken,
+                Link: newLinkUrl,
+                expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+            },
+        });
+        return res.status(200).send({ success: true, updatedFile: updatedLink });
     }
     catch (error) {
-        return res.status(500).send({ success: false, message: error });
+        console.error("Error in reinitiliasedFile:", error);
+        return res.status(500).send({ success: false, message: error.message || error });
     }
 });
 exports.reinitiliasedFile = reinitiliasedFile;

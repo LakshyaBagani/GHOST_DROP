@@ -7,6 +7,7 @@ import FileTable, { FileData } from "@/components/FileTable";
 import { FolderOpen, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
+import { log } from "console";
 
 const Dashboard = () => {
   const [files, setFiles] = useState<FileData[]>([]);
@@ -33,58 +34,56 @@ const Dashboard = () => {
         },
       });
       const filesFromServer = response.data.files;
-      console.log("All files",response.data);
-      
 
       const formattedFiles = filesFromServer.map((file: any) => ({
         ...file,
         createdAt: new Date(file.createdAt),
         type: file.mimeType,
         name: file.fileName,
-        status:file.link.used,
-        Link:file.link.Link
+        status: file.link.used,
+        Link: file.link.Link,
       }));
-      console.log("Formate",formattedFiles);
-      
+
       setFiles(formattedFiles);
     };
 
     fetchFiles();
   }, [navigate]);
 
-  useEffect(() => {
-    console.log(
-      "Local files",
-      JSON.parse(localStorage.getItem("requiredFile"))
-    );
-  }, [files]);
-
   const handleFileUpload = (newFile: FileData) => {
     setUsersFileUpload((prev) => [newFile, ...prev]);
     localStorage.setItem("requiredFile", JSON.stringify([newFile, ...files]));
   };
 
-  const handleToggleStatus = (id: string) => {
-    // setFiles((prev) =>
-    //   prev.map((file) =>
-    //     file.id === id
-    //       ? { ...file, status: file.status === "used" ? "unused" : "used" }
-    //       : file
-    //   )
-    // );
+  const handleToggleStatus = async (id: string) => {
+    const matchedFile = files.find((file) => file.id === id);
+    const tokenId = matchedFile.linkId;
+    const token = localStorage.getItem("token");
 
-    // const file = files.find((f) => f.id === id);
-    // if (file) {
-    //   toast({
-    //     title: "Status updated",
-    //     description: `${file.name} marked as ${
-    //       file.status === false ? "unused" : "used"
-    //     }.`,
-    //   });
-    // }
+    try {
+      if (matchedFile.status === true) {
+        const response = await axios.post(
+          "http://localhost:3000/files/updateStatus",
+          { tokenId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data.success === true) {
+          window.location.reload();
+        }
+        console.log("Toggle response", response.data);
+      }
+    } catch (error) {
+      toast({
+        title: "Fail to reinitialize ",
+        description: `File has not reinitialize`,
+        variant: "destructive",
+      });
+    }
   };
-
-  
 
   const handleDeleteFile = async (id: string) => {
     const file = files.find((f) => f.id === id);

@@ -27,7 +27,8 @@ export interface FileData {
   Link: string;
   createdAt: Date;
   status: Boolean;
-  type:string
+  type:string;
+  linkId:string
 }
 
 interface FileTableProps {
@@ -153,7 +154,7 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
                         : "bg-success hover:bg-success/80 text-success-foreground border-success"
                     }
                   >
-                    {"Mark as Unused"}
+                    {"Regenerate Link"}
                   </Button>
                 </TableCell>
                 <TableCell>

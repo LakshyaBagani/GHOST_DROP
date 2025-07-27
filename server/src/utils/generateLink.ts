@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken"
 import { randomUUID } from "crypto"
 import prisma from "../config/db"
 
-export const generateLink = async (hash:String , expireTime:any , iv:String , mimeType:String)=>{
-    const tokenId = randomUUID()
+export const generateLink = async (hash:string , iv:string , mimeType:string)=>{
+    const tokenId = randomUUID();
+    const expireTime = 1440;
     const exp = Math.floor(Date.now() / 1000) + 60 * expireTime
     const payload = {
         hash:hash,
@@ -26,5 +27,5 @@ export const generateLink = async (hash:String , expireTime:any , iv:String , mi
     })
 
     
-    return {Link:link , LinkTokenId:tokenId};
+    return {Link:link , LinkTokenId:tokenId , Token:token};
 }

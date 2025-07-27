@@ -16,8 +16,9 @@ exports.generateLink = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = require("crypto");
 const db_1 = __importDefault(require("../config/db"));
-const generateLink = (hash, expireTime, iv, mimeType) => __awaiter(void 0, void 0, void 0, function* () {
+const generateLink = (hash, iv, mimeType) => __awaiter(void 0, void 0, void 0, function* () {
     const tokenId = (0, crypto_1.randomUUID)();
+    const expireTime = 1440;
     const exp = Math.floor(Date.now() / 1000) + 60 * expireTime;
     const payload = {
         hash: hash,
@@ -36,6 +37,6 @@ const generateLink = (hash, expireTime, iv, mimeType) => __awaiter(void 0, void 
             Link: link
         }
     });
-    return { Link: link, LinkTokenId: tokenId };
+    return { Link: link, LinkTokenId: tokenId, Token: token };
 });
 exports.generateLink = generateLink;
