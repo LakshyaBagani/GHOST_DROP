@@ -10,6 +10,7 @@ import axios from "axios";
 
 const Dashboard = () => {
   const [files, setFiles] = useState<FileData[]>([]);
+  const [usersFileUpload, setUsersFileUpload] = useState<FileData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterType, setFilterType] = useState("all");
@@ -33,22 +34,30 @@ const Dashboard = () => {
       });
       const filesFromServer = response.data.files;
 
-    const formattedFiles = filesFromServer.map((file: any) => ({
-      ...file,
-      createdAt: new Date(file.createdAt),
-      type: file.mimeType,  
-    }));
+      const formattedFiles = filesFromServer.map((file: any) => ({
+        ...file,
+        createdAt: new Date(file.createdAt),
+        type: file.mimeType,
+        name: file.fileName,
+      }));
 
-    setFiles(formattedFiles);
+      setFiles(formattedFiles);
     };
 
     fetchFiles();
   }, [navigate]);
 
-  useEffect(()=>{console.log("User file response", files)},[files])
+  useEffect(() => {
+    console.log("Usersss file response", sortedFiles);
+    console.log(
+      "Local files",
+      JSON.parse(localStorage.getItem("requiredFile"))
+    );
+  }, [files]);
 
   const handleFileUpload = (newFile: FileData) => {
-    setFiles((prev) => [newFile, ...prev]);
+    setUsersFileUpload((prev) => [newFile, ...prev]);
+    localStorage.setItem("requiredFile", JSON.stringify([newFile, ...files]));
   };
 
   const handleToggleStatus = (id: string) => {
@@ -71,16 +80,26 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteFile = (id: string) => {
-    const file = files.find((f) => f.id === id);
-    setFiles((prev) => prev.filter((file) => file.id !== id));
+  const handleDeleteFile = async (id: string) => {
 
-    if (file) {
+    const file = files.find((f) => f.id === id);
+    const token = localStorage.getItem("token");
+
+    const response = await axios.delete("http://localhost:3000/files/delete", {
+      data: { id },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    if (response.data.success === true) {
       toast({
         title: "File deleted",
         description: `${file.name} has been removed from your vault.`,
         variant: "destructive",
       });
+      setTimeout(()=>{window.location.reload();},500)
     }
   };
 

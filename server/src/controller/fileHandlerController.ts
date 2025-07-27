@@ -137,14 +137,14 @@ export const getFiles = async (req: Request, res: Response) => {
 
 export const deleteFile = async (req: Request, res: Response) => {
   try {
-    const { iv } = req.body;
-    if (!iv) {
+    const { id } = req.body;
+    if (!id) {
       return res
         .status(401)
         .send({ success: false, message: "Unable to delete the file" });
     }
     await prisma.files.delete({
-      where: { iv },
+      where: { id },
     });
     return res.send({ success: true, message: "File deleted" });
   } catch (error) {

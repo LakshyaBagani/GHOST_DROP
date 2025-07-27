@@ -56,12 +56,36 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
   };
 
   const handleCopy = (fileName: string) => {
-    navigator.clipboard.writeText(`https://ghostdrop.app/file/${fileName}`);
-    toast({
-      title: "Link copied!",
-      description: "File link has been copied to clipboard.",
-    });
-  };
+  const userFileString = localStorage.getItem("requiredFile");
+
+  if (!userFileString) return;
+
+  try {
+    const userFiles: FileData[] = JSON.parse(userFileString);
+
+    const matchedFile = userFiles.find((file) => file.name === fileName);
+
+    if (matchedFile) {
+      const fileLink = matchedFile.Link;
+      navigator.clipboard.writeText(fileLink);
+      console.log(files);
+      
+      toast({
+        title: "Link copied!",
+        description: `Link for "${matchedFile.name}" has been copied to clipboard.`,
+      });
+    } else {
+      toast({
+        title: "File not found",
+        description: `No matching file found for "${fileName}".`,
+        variant: "destructive",
+      });
+    }
+  } catch (err) {
+    console.error("Error parsing user files from localStorage", err);
+  }
+};
+
 
   const handleShare = (fileName: string) => {
     if (navigator.share) {

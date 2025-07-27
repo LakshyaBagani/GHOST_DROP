@@ -60,7 +60,6 @@ const FileUpload = ({
           },
         }
       );
-      console.log("Upload response",response.data);
 
       const upload = response.data
       
@@ -74,7 +73,6 @@ const FileUpload = ({
         Link: upload.Link,
         type:upload.type
       };
-      console.log("New File",newFile);
       
       onFileUpload(newFile);
 
@@ -82,7 +80,7 @@ const FileUpload = ({
         title: "File uploaded successfully!",
         description: `${file.name} has been added to your vault.`,
       });
-
+      setTimeout(()=>{window.location.reload();},1000)
       setIsUploading(false);
 
       // Reset file input

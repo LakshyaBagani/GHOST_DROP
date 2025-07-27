@@ -126,14 +126,14 @@ const getFiles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getFiles = getFiles;
 const deleteFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { iv } = req.body;
-        if (!iv) {
+        const { id } = req.body;
+        if (!id) {
             return res
                 .status(401)
                 .send({ success: false, message: "Unable to delete the file" });
         }
         yield db_1.default.files.delete({
-            where: { iv },
+            where: { id },
         });
         return res.send({ success: true, message: "File deleted" });
     }
