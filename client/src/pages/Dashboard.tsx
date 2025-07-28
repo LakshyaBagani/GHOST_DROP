@@ -46,7 +46,6 @@ const Dashboard = () => {
         status: file.link.used,
         Link: file.link.Link,
       }));
-      console.log("For",filesFromServer);
       setFiles(formattedFiles);
     };
 
@@ -55,13 +54,12 @@ const Dashboard = () => {
 
   const handleFileUpload = (newFile: FileData) => {
     setUsersFileUpload((prev) => [newFile, ...prev]);
-    localStorage.setItem("requiredFile", JSON.stringify([newFile, ...files]));
   };
 
   const handleToggleStatus = async (id: string) => {
     toast({
             title: "Regenerating!",
-            description: `Link has start regenerating.`,
+            description: `Link has started regenerating.`,
         })
     const matchedFile = files.find((file) => file.id === id);
     const tokenId = matchedFile.linkId;
@@ -100,8 +98,6 @@ const Dashboard = () => {
             description: `New link has been generated.`,
           });
         }
-
-        console.log("Toggle response", response.data);
       }
     } catch (error) {
       toast({
