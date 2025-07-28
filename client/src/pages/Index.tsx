@@ -9,7 +9,7 @@ const Index = () => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const user = localStorage.getItem("ghost-drop-user");
+    const user = localStorage.getItem("token");
     if (user) {
       navigate("/dashboard");
     }
