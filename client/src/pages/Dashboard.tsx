@@ -34,16 +34,19 @@ const Dashboard = () => {
         },
       });
       const filesFromServer = response.data.files;
+      
+      
 
       const formattedFiles = filesFromServer.map((file: any) => ({
         ...file,
         createdAt: new Date(file.createdAt),
         type: file.mimeType,
         name: file.fileName,
+        link: file.link,
         status: file.link.used,
         Link: file.link.Link,
       }));
-
+      console.log("For",filesFromServer);
       setFiles(formattedFiles);
     };
 
@@ -72,8 +75,28 @@ const Dashboard = () => {
           }
         );
         if (response.data.success === true) {
-          window.location.reload();
+          const updatedLink = response.data.updatedFile;
+          
+
+          setFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.id === id
+                ? {
+                    ...file,
+                    link: updatedLink,
+                    Link: updatedLink.Link,
+                    status: updatedLink.used,
+                  }
+                : file
+            )
+          );
+
+          toast({
+            title: "Link regenerated!",
+            description: `New link has been generated.`,
+          });
         }
+
         console.log("Toggle response", response.data);
       }
     } catch (error) {
@@ -154,7 +177,7 @@ const Dashboard = () => {
 
   const stats = {
     total: files.length,
-    used: files.filter((f) => f.status === false).length,
+    used: files.filter((f) => f.status === true).length,
     unused: files.filter((f) => f.status === false).length,
   };
 

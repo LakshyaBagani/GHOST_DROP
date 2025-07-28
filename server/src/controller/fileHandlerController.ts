@@ -100,7 +100,7 @@ export const getFiles = async (req: Request, res: Response) => {
     if (tokenHistory.used || tokenHistory.expiresAt < new Date()) {
       return res
         .status(401)
-        .send({ success: false, message: "Link already used or expired" });
+        .send({ success: false ,  message: "Link already used or expired" });
     }
 
     const ivHex = decode.iv;
