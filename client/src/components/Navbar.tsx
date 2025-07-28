@@ -14,12 +14,12 @@ const Navbar = () => {
   const { toast } = useToast();
 
   const handleLogout = () => {
-    localStorage.removeItem("ghost-drop-user");
+    localStorage.removeItem("token");
     toast({
       title: "Signed out",
       description: "You have been successfully logged out.",
     });
-    navigate("/signin");
+    navigate("/");
   };
 
   const user = JSON.parse(localStorage.getItem("ghost-drop-user") || "{}");
