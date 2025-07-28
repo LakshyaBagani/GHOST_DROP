@@ -39,6 +39,7 @@ interface FileTableProps {
 
 const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
   const { toast } = useToast();
+  const [clickedButtons, setClickedButtons] = useState<Set<string>>(new Set());
 
   const getFileIcon = (type: string) => {
     if (type.startsWith("image/")) return Image;
@@ -57,34 +58,30 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
   };
 
   const handleCopy = (fileName: string) => {
-  console.log("files",files);
+    console.log("files",files);
 
-  try {
-
-    const matchedFile = files.find((file) => file.name === fileName);
-    
-
-    if (matchedFile) {
-      const fileLink = matchedFile.Link;
-      navigator.clipboard.writeText(fileLink);
-     
+    try {
+      const matchedFile = files.find((file) => file.name === fileName);
       
-      toast({
-        title: "Link copied!",
-        description: `Link for "${matchedFile.name}" has been copied to clipboard.`,
-      });
-    } else {
-      toast({
-        title: "File not found",
-        description: `No matching file found for "${fileName}".`,
-        variant: "destructive",
-      });
+      if (matchedFile) {
+        const fileLink = matchedFile.Link;
+        navigator.clipboard.writeText(fileLink);
+       
+        toast({
+          title: "Link copied!",
+          description: `Link for "${matchedFile.name}" has been copied to clipboard.`,
+        });
+      } else {
+        toast({
+          title: "File not found",
+          description: `No matching file found for "${fileName}".`,
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error parsing user files from localStorage", err);
     }
-  } catch (err) {
-    console.error("Error parsing user files from localStorage", err);
-  }
-};
-
+  };
 
   const handleShare = (fileName: string) => {
     if (navigator.share) {
@@ -96,6 +93,7 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
       handleCopy(fileName);
     }
   };
+
 
   if (files.length === 0) {
     return (
@@ -121,6 +119,8 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
         </TableHeader>
         <TableBody>
           {files.map((file) => {
+            const isClicked = clickedButtons.has(file.id);
+            
             return (
               <TableRow 
                 key={file.id} 
@@ -147,11 +147,13 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
                     variant={file.status === false ? "outline" : "default"}
                     size="sm"
                     onClick={() => onToggleStatus(file.id)}
-                    className={
-                      file.status === false 
-                        ? "border-muted-foreground text-muted-foreground hover:bg-muted" 
-                        : "bg-success hover:bg-success/80 text-success-foreground border-success"
-                    }
+                    className={`transition-all duration-200 ${
+                      isClicked 
+                        ? "scale-95 bg-primary/80 text-primary-foreground border-primary shadow-inner" 
+                        : file.status === false 
+                        ? "border-muted-foreground text-muted-foreground hover:bg-muted active:scale-95" 
+                        : "bg-success hover:bg-success/80 text-success-foreground border-success active:scale-95"
+                    }`}
                   >
                     {"Regenerate Link"}
                   </Button>

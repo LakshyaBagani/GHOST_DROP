@@ -55,7 +55,7 @@ const SignUp = () => {
           name: formData.fullName 
         }));
         const response = await axios.post(
-          "http://localhost:3000/auth/signup",
+          "https://ghost-drop-gm11.onrender.com/auth/signup",
           payload
         );
 

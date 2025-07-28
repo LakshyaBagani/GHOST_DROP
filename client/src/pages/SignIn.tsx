@@ -24,7 +24,7 @@ const SignIn = () => {
     setTimeout(async() => {
       if (email && password) {
         localStorage.setItem("ghost-drop-user", JSON.stringify({name: "User" }));
-        const response = await axios.post("http://localhost:3000/auth/login" , {
+        const response = await axios.post("https://ghost-drop-gm11.onrender.com/auth/login" , {
           email,password
         })
         console.log("Response login",response.data);

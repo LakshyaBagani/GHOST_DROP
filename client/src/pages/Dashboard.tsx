@@ -28,7 +28,7 @@ const Dashboard = () => {
 
     const fetchFiles = async () => {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:3000/files/allfiles", {
+      const response = await axios.get("https://ghost-drop-gm11.onrender.com/files/allfiles", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,6 +59,10 @@ const Dashboard = () => {
   };
 
   const handleToggleStatus = async (id: string) => {
+    toast({
+            title: "Regenerating!",
+            description: `Link has start regenerating.`,
+        })
     const matchedFile = files.find((file) => file.id === id);
     const tokenId = matchedFile.linkId;
     const token = localStorage.getItem("token");
@@ -66,7 +70,7 @@ const Dashboard = () => {
     try {
       if (matchedFile.status === true) {
         const response = await axios.post(
-          "http://localhost:3000/files/updateStatus",
+          "https://ghost-drop-gm11.onrender.com/files/updateStatus",
           { tokenId },
           {
             headers: {
@@ -113,7 +117,7 @@ const Dashboard = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.delete(
-        "http://localhost:3000/files/delete",
+        "https://ghost-drop-gm11.onrender.com/files/delete",
         {
           data: { id },
           headers: {

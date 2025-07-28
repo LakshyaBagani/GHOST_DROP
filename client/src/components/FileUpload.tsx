@@ -51,7 +51,7 @@ const FileUpload = ({
       formData.append("file", file);
 
       const response = await axios.post(
-        "http://localhost:3000/files/upload",
+        "https://ghost-drop-gm11.onrender.com/files/upload",
         formData,
         {
           headers: {

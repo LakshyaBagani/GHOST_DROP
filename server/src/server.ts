@@ -8,7 +8,7 @@ import cors from "cors"
 dotenv.config()
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: 'https://ghost-drop-tqzj.vercel.app/signin',
   credentials: true, 
 }));
 app.use(cookieParser())
