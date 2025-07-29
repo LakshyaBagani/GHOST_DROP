@@ -28,25 +28,32 @@ const Dashboard = () => {
 
     const fetchFiles = async () => {
       const token = localStorage.getItem("token");
-      const response = await axios.get("https://ghost-drop-gm11.onrender.com/files/allfiles", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const filesFromServer = response.data.files;
-      
-      
+      const response = await axios.get(
+        "https://ghost-drop-gm11.onrender.com/files/allfiles",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const formattedFiles = filesFromServer.map((file: any) => ({
-        ...file,
-        createdAt: new Date(file.createdAt),
-        type: file.mimeType,
-        name: file.fileName,
-        link: file.link,
-        status: file.link.used,
-        Link: file.link.Link,
-      }));
-      setFiles(formattedFiles);
+      if (response.data.success === true) {
+        const filesFromServer = response.data.files;
+
+        const formattedFiles = filesFromServer.map((file: any) => ({
+          ...file,
+          createdAt: new Date(file.createdAt),
+          type: file.mimeType,
+          name: file.fileName,
+          link: file.link,
+          status: file.link.used,
+          Link: file.link.Link,
+        }));
+        setFiles(formattedFiles);
+      }else{
+        console.log("No files found");
+        
+      }
     };
 
     fetchFiles();
@@ -58,9 +65,9 @@ const Dashboard = () => {
 
   const handleToggleStatus = async (id: string) => {
     toast({
-            title: "Regenerating!",
-            description: `Link has started regenerating.`,
-        })
+      title: "Regenerating!",
+      description: `Link has started regenerating.`,
+    });
     const matchedFile = files.find((file) => file.id === id);
     const tokenId = matchedFile.linkId;
     const token = localStorage.getItem("token");
@@ -78,7 +85,6 @@ const Dashboard = () => {
         );
         if (response.data.success === true) {
           const updatedLink = response.data.updatedFile;
-          
 
           setFiles((prevFiles) =>
             prevFiles.map((file) =>

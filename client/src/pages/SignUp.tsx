@@ -3,10 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Ghost, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import axios from 'axios'
+import axios from "axios";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -42,7 +48,6 @@ const SignUp = () => {
       return;
     }
 
-    
     setTimeout(async () => {
       if (formData.fullName && formData.email && formData.password) {
         const payload = {
@@ -50,26 +55,32 @@ const SignUp = () => {
           email: formData.email,
           password: formData.password,
         };
-        localStorage.setItem("ghost-drop-user", JSON.stringify({ 
-          email: formData.email, 
-          name: formData.fullName 
-        }));
+        localStorage.setItem(
+          "ghost-drop-user",
+          JSON.stringify({
+            email: formData.email,
+            name: formData.fullName,
+          })
+        );
         const response = await axios.post(
           "https://ghost-drop-gm11.onrender.com/auth/signup",
           payload
         );
 
-        console.log("Signup response:", response.data);
-        if(response.data.success === true){
+        if (response.data.success === true) {
           navigate("/dashboard");
-          localStorage.setItem("token",response.data.token)
+          localStorage.setItem("token", response.data.token);
+          toast({
+            title: "Welcome to Ghost Drop!",
+            description: "Your account has been created successfully.",
+          });
+        } else {
+          toast({
+            title: "Signup Failed!",
+            description: "Failed to Signup for Ghost Drop.",
+          });
         }
-        toast({
-          title: "Welcome to Ghost Drop!",
-          description: "Your account has been created successfully.",
-        });
-        
-      } else     {
+      } else {
         toast({
           title: "Error",
           description: "Please fill in all fields.",
@@ -86,7 +97,9 @@ const SignUp = () => {
         <CardHeader className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Ghost className="h-8 w-8 text-primary animate-pulse-glow" />
-            <CardTitle className="text-2xl font-bold text-primary">Ghost Drop</CardTitle>
+            <CardTitle className="text-2xl font-bold text-primary">
+              Ghost Drop
+            </CardTitle>
           </div>
           <CardDescription className="text-muted-foreground">
             Create your secure file vault account
@@ -95,7 +108,9 @@ const SignUp = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
+              <Label htmlFor="fullName" className="text-foreground">
+                Full Name
+              </Label>
               <Input
                 id="fullName"
                 type="text"
@@ -107,7 +122,9 @@ const SignUp = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -119,7 +136,9 @@ const SignUp = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Password</Label>
+              <Label htmlFor="password" className="text-foreground">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -146,7 +165,9 @@ const SignUp = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-foreground">
+                Confirm Password
+              </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -172,8 +193,8 @@ const SignUp = () => {
                 </Button>
               </div>
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full ghost-glow border-2 font-semibold"
               disabled={isLoading}
             >
@@ -183,7 +204,10 @@ const SignUp = () => {
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/signin" className="text-primary hover:underline font-semibold">
+              <Link
+                to="/signin"
+                className="text-primary hover:underline font-semibold"
+              >
                 Sign in
               </Link>
             </p>

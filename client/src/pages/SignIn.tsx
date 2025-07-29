@@ -27,15 +27,20 @@ const SignIn = () => {
         const response = await axios.post("https://ghost-drop-gm11.onrender.com/auth/login" , {
           email,password
         })
-        console.log("Response login",response.data);
         if(response.data.success===true){
           navigate("/dashboard");
           localStorage.setItem("token",response.data.token)
-        }
-        toast({
+          toast({
           title: "Welcome back!",
           description: "Successfully signed in to Ghost Drop.",
         });
+        }else{
+          toast({
+          title: "Login Failed!",
+          description: "Failed to login to Ghost Drop.",
+        });
+        }
+        
         
       } else {
         toast({
