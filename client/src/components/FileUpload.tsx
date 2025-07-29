@@ -62,8 +62,6 @@ const FileUpload = ({
       );
 
       const upload = response.data
-
-      
       
       
 

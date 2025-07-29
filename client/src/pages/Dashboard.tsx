@@ -50,7 +50,6 @@ const Dashboard = () => {
           Link: file.link.Link,
         }));
         setFiles(formattedFiles);
-        console.log(files);
         
       }else{
         console.log("No files found");
