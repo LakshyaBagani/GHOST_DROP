@@ -61,7 +61,6 @@ const FileTable = ({ files, onToggleStatus, onDeleteFile }: FileTableProps) => {
 
     try {
       const matchedFile = files.find((file) => file.name === fileName);
-      console.log("Match file",matchedFile);
       if (matchedFile) {
         const fileLink = matchedFile.Link;
         
