@@ -65,7 +65,7 @@ const SignUp = () => {
         const response = await axios.post(
           "https://ghost-drop-gm11.onrender.com/auth/signup",
           payload
-        );
+        )
 
         if (response.data.success === true) {
           navigate("/dashboard");
