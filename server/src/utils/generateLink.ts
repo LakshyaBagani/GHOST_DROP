@@ -15,7 +15,7 @@ export const generateLink = async (hash:string , iv:string , mimeType:string)=>{
     }
 
     const token = jwt.sign(payload , process.env.MY_SERCET_KEY!)
-    const link = `http://localhost:3000/files/content?token=${token}`
+    const link = `https://ghost-drop-gm11.onrender.com/files/content?token=${token}`
 
     await prisma.link.create({
         data:{
