@@ -10,17 +10,12 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ["https://ghost-drop-tqzj.vercel.app"],
+  origin: ["https://ghost-drop-coral.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
-// Optional: Handle preflight requests explicitly
-app.options("*", cors({
-  origin: "https://ghost-drop-tqzj.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-}));
+
 
 app.use(cookieParser());
 app.use(express.json());
